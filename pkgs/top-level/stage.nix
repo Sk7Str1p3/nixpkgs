@@ -333,10 +333,7 @@ let
         ] ++ overlays;
         crossSystem = {
           isStatic = true;
-          config = lib.systems.parse.tripleFromSystem stdenv.hostPlatform.parsed;
-          gcc =
-            lib.optionalAttrs (stdenv.hostPlatform.system == "powerpc64-linux") { abi = "elfv2"; }
-            // stdenv.hostPlatform.gcc or { };
+          parsed = stdenv.hostPlatform.parsed;
         };
       });
     };
