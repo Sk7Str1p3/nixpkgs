@@ -305,25 +305,41 @@ let
 
     # Fully static packages.
     # Currently uses Musl on Linux (couldn’t get static glibc to work).
-    pkgsStatic = nixpkgsFun ({
-      overlays = [
-        (self': super': {
-          pkgsStatic = super';
-        })
-      ] ++ overlays;
-      crossSystem = {
-        isStatic = true;
-        config = lib.systems.parse.tripleFromSystem (
-          if stdenv.hostPlatform.isLinux then
-            makeMuslParsedPlatform stdenv.hostPlatform.parsed
-          else
-            stdenv.hostPlatform.parsed
-        );
-        gcc =
-          lib.optionalAttrs (stdenv.hostPlatform.system == "powerpc64-linux") { abi = "elfv2"; }
-          // stdenv.hostPlatform.gcc or { };
-      };
-    });
+    pkgsStatic = {
+      musl = nixpkgsFun ({
+        overlays = [
+          (self': super': {
+            pkgsStatic.musl = super';
+          })
+        ] ++ overlays;
+        crossSystem = {
+          isStatic = true;
+          config = lib.systems.parse.tripleFromSystem (
+            if stdenv.hostPlatform.isLinux then
+              makeMuslParsedPlatform stdenv.hostPlatform.parsed
+            else
+              stdenv.hostPlatform.parsed
+          );
+          gcc =
+            lib.optionalAttrs (stdenv.hostPlatform.system == "powerpc64-linux") { abi = "elfv2"; }
+            // stdenv.hostPlatform.gcc or { };
+        };
+      });
+      glibc = nixpkgsFun ({
+        overlays = [
+          (self': super': {
+            pkgsStatic.glibc = super';
+          })
+        ] ++ overlays;
+        crossSystem = {
+          isStatic = true;
+          config = lib.systems.parse.tripleFromSystem stdenv.hostPlatform.parsed;
+          gcc =
+            lib.optionalAttrs (stdenv.hostPlatform.system == "powerpc64-linux") { abi = "elfv2"; }
+            // stdenv.hostPlatform.gcc or { };
+        };
+      });
+    };
   };
 
   # The complete chain of package set builders, applied from top to bottom.
